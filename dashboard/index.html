@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Token Radar — pre-token protocols ranked by implied launch value</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">&#9678;</span>
+      <div>
+        <h1>Token Radar</h1>
+        <p class="tagline">Which pre-token protocols would a launch be worth — and how to farm them.</p>
+      </div>
+    </div>
+    <dl class="meta">
+      <div><dt>Snapshot</dt><dd id="meta-asof">—</dd></div>
+      <div><dt>Source</dt><dd id="meta-source">DefiLlama</dd></div>
+      <div><dt>Model</dt><dd id="meta-model">radar-2</dd></div>
+      <div><dt>Formula</dt><dd class="formula">implied = TVL &times; category multiple &times; growth &times; maturity</dd></div>
+    </dl>
+  </div>
+</header>
+
+<main>
+  <section class="stats" id="stats" aria-label="Coverage"></section>
+
+  <section class="controls" aria-label="Filter and sort the board">
+    <label class="ctl ctl-search">Search
+      <input id="q" type="search" placeholder="Protocol name or slug…" autocomplete="off">
+    </label>
+    <label class="ctl">Category
+      <select id="category"><option value="">All categories</option></select>
+    </label>
+    <label class="ctl">Chain
+      <select id="chain"><option value="">All chains</option></select>
+    </label>
+    <label class="ctl ctl-check"><input id="watchlist" type="checkbox"> Watchlist only</label>
+    <label class="ctl">Sort by
+      <select id="sort">
+        <option value="rank">Rank (implied value)</option>
+        <option value="implied">Implied value</option>
+        <option value="tvl">TVL</option>
+        <option value="growth">7d growth</option>
+        <option value="age">Age (no token)</option>
+      </select>
+    </label>
+    <p class="count" id="count" role="status"></p>
+  </section>
+
+  <section id="detail" class="detail" hidden aria-label="Protocol detail"></section>
+
+  <section class="board-wrap" aria-label="Ranked board">
+    <div class="section-head">
+      <h2>Ranked board <span class="sub">pre-token protocols only</span></h2>
+      <p class="note">Every row records no token yet. Click a row for its model breakdown, farm plan and comparables.</p>
+    </div>
+    <table class="board" id="board">
+      <thead><tr>
+        <th class="num">#</th><th>Protocol</th><th>Category</th><th>Chains</th>
+        <th class="num">TVL</th><th class="num">7d</th><th class="num">Age</th><th class="num">Implied value</th>
+      </tr></thead>
+      <tbody id="board-body"></tbody>
+    </table>
+    <p class="empty" id="board-empty" hidden>No protocols match these filters.</p>
+  </section>
+
+  <section class="live-wrap" aria-label="Live tokens">
+    <div class="section-head">
+      <h2>Live tokens <span class="sub">already trading — the model&rsquo;s calibration</span></h2>
+      <p class="note">These protocols already trade, so they are <strong>not</strong> ranked launches. Their market
+      capitalisation over TVL sets the category multiple the board is priced with.</p>
+    </div>
+    <table class="board live" id="live-table">
+      <thead><tr>
+        <th class="num">#</th><th>Token</th><th>Category</th><th>Chains</th>
+        <th class="num">TVL</th><th class="num">Market cap</th><th class="num">7d</th><th class="num">Mcap / TVL</th>
+      </tr></thead>
+      <tbody id="live-body"></tbody>
+    </table>
+  </section>
+
+  <section class="explainer" aria-label="How the model works">
+    <h2>How the model works</h2>
+    <p class="lede">Implied launch value is priced from the snapshot&rsquo;s own live market — never from a
+    hardcoded list of names. For each category, the multiple is the <em>median</em> market-cap-over-TVL of the
+    live protocols in that category (at least 3 samples, otherwise the global median), clamped to 0.05&ndash;3.0.</p>
+    <div class="formula-box">
+      <code>implied = TVL &times; category_multiple &times; growth_mult &times; maturity_mult</code>
+      <ul>
+        <li><strong>growth_mult</strong> = 1 + clamp(7d change, &minus;50%, +100%) &divide; 100 &times; 0.6</li>
+        <li><strong>maturity_mult</strong> = 0.7 + min(age in days, 1460) &divide; 1460 &times; 0.5 &nbsp;(0.7&ndash;1.2; longer with no token, more pent-up launch value)</li>
+        <li><strong>age</strong> = snapshot date &minus; listed date; unknown listing date counts as 365 days.</li>
+      </ul>
+    </div>
+    <div class="explain-cols">
+      <div>
+        <h3>Category multiples</h3>
+        <table class="multiples" id="multiples-table">
+          <thead><tr><th>Category</th><th class="num">Multiple</th><th class="num">Live n</th></tr></thead>
+          <tbody id="multiples-body"></tbody>
+        </table>
+      </div>
+      <div>
+        <h3>What is excluded — and why</h3>
+        <ul class="rules">
+          <li>Any protocol that already trades (market cap recorded) is never ranked; it only calibrates the multiples.</li>
+          <li>Centralised exchanges, bridges and liquid-staking / restaking products are excluded — a launch there is not a farmable protocol token.</li>
+          <li>Wrapped, staked or staking products of a token that trades are excluded, as are exchange-named and version-marked (&ldquo;V2&rdquo;) entries.</li>
+          <li>The watchlist is a floor, never a ceiling: it is the 40 pre-token protocols at or above $50M TVL. The board also ranks every other rankable pre-token protocol below that floor.</li>
+          <li>We say a protocol &ldquo;records no token&rdquo;, not that it &ldquo;has none&rdquo; — the snapshot is what we can see.</li>
+        </ul>
+        <h3>Reading the board</h3>
+        <p>Rank is by implied value, highest first. A high rank means a big protocol, in a category the market
+        already pays up for, that is growing and has run a long time with no token. The farm plan under each
+        detail is generated from that protocol&rsquo;s own category, chain, size and age — costs and times included.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p>Token Radar &middot; model radar-2 &middot; snapshot 2026-11-14 &middot; Static page — renders with no network.
+  Data: DefiLlama protocol snapshot. A protocol &ldquo;records no token&rdquo; when the snapshot lists no market cap, no Gecko id and no symbol for it.</p>
+</footer>
+
+<script src="../data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
